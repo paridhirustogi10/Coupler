@@ -74,7 +74,7 @@ module atm_land_ice_flux_exchange_mod
   use fms_mod,            only: clock_flag_default, check_nml_error, error_mesg
   use fms_mod,            only: open_namelist_file, write_version_number
   use data_override_mod,  only: data_override
-  use coupler_types_mod,  only: coupler_1d_bc_type, coupler_type_copy, ind_psurf, ind_u10, ind_flux, ind_flux0
+  use coupler_types_mod,  only: coupler_1d_bc_type, coupler_type_copy, ind_psurf, ind_u10, ind_flux, ind_flux0, ind_ustar, ind_hs !liao  
   use coupler_types_mod,  only: coupler_type_initialized, coupler_type_spawn
   use coupler_types_mod,  only: coupler_type_send_data, coupler_type_set_diags
   use coupler_types_mod,  only: coupler_type_data_override
@@ -724,6 +724,7 @@ contains
          ex_t_atm,      &
          ex_p_atm,      &
          ex_u_atm, ex_v_atm,    &
+         ex_hs,         &
          ex_gust,       &
          ex_t_surf4,    &
          ex_u_surf, ex_v_surf,  &
@@ -894,6 +895,7 @@ contains
     call data_override ('ATM', 'p_bot',  Atm%p_bot , Time)
     call data_override ('ATM', 'u_bot',  Atm%u_bot , Time)
     call data_override ('ATM', 'v_bot',  Atm%v_bot , Time)
+    call data_override ('ATM', 'hs',     Atm%hs ,    Time) !brandon & liao
     call data_override ('ATM', 'p_surf', Atm%p_surf, Time)
     call data_override ('ATM', 'slp',    Atm%slp,    Time)
     call data_override ('ATM', 'gust',   Atm%gust,   Time)
@@ -1017,6 +1019,7 @@ contains
     call put_to_xgrid (Atm%p_bot , 'ATM', ex_p_atm , xmap_sfc, remap_method=remap_method, complete=.false.)
     call put_to_xgrid (Atm%u_bot , 'ATM', ex_u_atm , xmap_sfc, remap_method=remap_method, complete=.false.)
     call put_to_xgrid (Atm%v_bot , 'ATM', ex_v_atm , xmap_sfc, remap_method=remap_method, complete=.false.)
+    call put_to_xgrid (Atm%hs ,    'ATM', ex_hs ,    xmap_sfc, remap_method=remap_method, complete=.false.)
     call put_to_xgrid (Atm%p_surf, 'ATM', ex_p_surf, xmap_sfc, remap_method=remap_method, complete=.false.)
     call put_to_xgrid (Atm%slp,    'ATM', ex_slp,    xmap_sfc, remap_method=remap_method, complete=.false.)
     call put_to_xgrid (Atm%gust,   'ATM', ex_gust,   xmap_sfc, remap_method=remap_method, complete=.true.)
@@ -1207,6 +1210,8 @@ contains
              if (.not. ex_gas_fields_atm%bc(n)%field(ind_u10)%override) then  !{
                 do i = is,ie
                    ex_gas_fields_atm%bc(n)%field(ind_u10)%values(i) = ex_u10(i)
+                   ex_gas_fields_atm%bc(n)%field(ind_ustar)%values(i) = ex_u_star(i)
+                   ex_gas_fields_atm%bc(n)%field(ind_hs)%values(i) = ex_hs(i)
                 enddo
              endif  !}
           endif  !}
